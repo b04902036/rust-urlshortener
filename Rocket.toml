@@ -1,0 +1,2 @@
+[default.databases.diesel_mysql]
+url = "mysql://urlshortener:LBO3uo9QKz9hAHoGNCYJylZbP1ceBACu@127.0.0.1:53306/diesel_mysql"

@@ -1,0 +1,15 @@
+[mysqld]
+open_files_limit = 8192
+max_connections = 4096
+# Add your MySQL configuration here.
+
+[client]
+default-character-set = utf8mb4
+
+[mysqld]
+bind-address=0.0.0.0
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+[mysql]
+default-character-set = utf8mb4
