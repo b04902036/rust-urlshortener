@@ -2,10 +2,24 @@ use rocket::http::{ContentType, Status};
 use rocket::response;
 use rocket::response::{Responder, Response};
 use rocket::*;
+use std::fmt::Debug;
 
 pub struct ApiResponse {
     status: Status,
     message: String,
+}
+
+impl<T> From<T> for ApiResponse
+where
+    T: Debug,
+{
+    fn from(error: T) -> ApiResponse {
+        println!("error: {:?}", error);
+        ApiResponse {
+            status: Status::InternalServerError,
+            message: format!("error: {:?}", error),
+        }
+    }
 }
 
 impl ApiResponse {

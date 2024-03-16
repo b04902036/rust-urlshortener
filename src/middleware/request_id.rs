@@ -28,12 +28,8 @@ impl Fairing for RequestIdInjector {
     }
 
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
-        let request_id = request
-            .headers()
-            .get(config::REQUEST_ID_HEADER)
-            .next()
-            .unwrap()
-            .to_string();
-        response.set_header(Header::new(config::REQUEST_ID_HEADER, request_id));
+        if let Some(request_id) = request.headers().get(config::REQUEST_ID_HEADER).next() {
+            response.set_header(Header::new(config::REQUEST_ID_HEADER, request_id));
+        }
     }
 }

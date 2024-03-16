@@ -30,24 +30,24 @@ diesel::table! {
 impl Url {
     pub fn to_redis(&self, connection: &mut Conn) -> AnyResult<()> {
         if connection.is_none() {
-            return Err(format_err!("cache service not available"));
+            return Err(anyhow!("cache service not available"));
         }
-        let expires = self
-            .expire_at_secs
-            .unwrap_or_else(|| config::MAX_URL_EXPIRE_SECS)
-            .to_string();
-        if self.short.is_none() {
-            return Err(format_err!("short url not set"));
-        }
-        let cache_url = [("origin", &self.origin), ("expires_at_secs", &expires)];
-        let key = self.short.as_ref().unwrap();
         if let Some(conn) = connection.as_mut() {
-            conn.hset_multiple(key, &cache_url)?;
+            let expires = self
+                .expire_at_secs
+                .unwrap_or_else(|| config::MAX_URL_EXPIRE_SECS)
+                .to_string();
+            let cache_url = [("origin", &self.origin), ("expires_at_secs", &expires)];
+            if let Some(key) = self.short.as_ref() {
+                conn.hset_multiple(key, &cache_url)?;
+            } else {
+                return Err(anyhow!("short url not set"));
+            }
         }
         Ok(())
     }
 
-    pub fn from_redis(connection: &mut Conn, key: &String) -> AnyResult<Self> {
+    pub fn from_redis(connection: &mut Conn, key: &str) -> AnyResult<Self> {
         if connection.is_none() {
             return Err(format_err!("cache service not available"));
         }
@@ -70,7 +70,7 @@ impl Url {
                 created_at_secs: None,
             })
         } else {
-            Err(format_err!(""))
+            Err(anyhow!(""))
         }
     }
 }
