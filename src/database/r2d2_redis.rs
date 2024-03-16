@@ -12,7 +12,7 @@ use std::ops::{Deref, DerefMut};
 type Pool = r2d2::Pool<RedisConnectionManager>;
 type PooledConn = PooledConnection<RedisConnectionManager>;
 
-pub struct Conn(pub Option<PooledConn>);
+pub struct Conn(Option<PooledConn>);
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for Conn {
