@@ -67,5 +67,5 @@ curl -X GET 'http://localhost:8000/url'
 
 ## TODOs
 --------
-- [ ] implement unit test
-- [ ] implement integration test
+- [ ] implement bloom filter
+- [ ] add CI
