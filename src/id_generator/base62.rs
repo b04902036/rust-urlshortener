@@ -14,3 +14,20 @@ lazy_static::lazy_static! {
 pub fn map(idx: i32) -> char {
     BASE62_MAPPER[&(idx & 63)]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn base62_mapper_with_64_length() {
+        assert_eq!(BASE62_MAPPER.len(), 64);
+    }
+
+    #[test]
+    fn map_should_not_overflow() {
+        for i in 0..1000 {
+            _ = map(i);
+        }
+    }
+}
