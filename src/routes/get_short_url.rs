@@ -23,7 +23,7 @@ async fn get_short_url(
                 .expire_at_secs
                 .map_or_else(|| 0, |v| v + val.created_at_secs.map_or_else(|| 0, |v| v));
             if expire_at > now_sec {
-                return Ok(Redirect::moved(val.origin));
+                return Ok(Redirect::found(val.origin));
             } else {
                 return Err(ApiResponse::err(Status::NotFound, format!("url not found")));
             }
@@ -61,7 +61,7 @@ async fn get_short_url(
         println!("fail to upload to cache: {:?}", msg);
     }
     if *expire > now_sec {
-        Ok(Redirect::moved(origin_url.to_owned()))
+        Ok(Redirect::found(origin_url.to_owned()))
     } else {
         Err(ApiResponse::err(Status::NotFound, format!("url not found")))
     }
