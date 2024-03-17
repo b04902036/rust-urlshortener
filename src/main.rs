@@ -1,26 +1,12 @@
 #[macro_use]
 extern crate rocket;
 
-mod middleware {
-    pub mod request_id;
-}
 mod config;
-mod database {
-    pub mod diesel_mysql;
-    pub mod r2d2_redis;
-}
-mod model {
-    pub mod url;
-}
-mod routes {
-    pub mod get_short_url;
-    pub mod post_url;
-    pub mod response;
-}
-mod id_generator {
-    pub mod base62;
-    pub mod random;
-}
+mod database;
+mod id_generator;
+mod middleware;
+mod model;
+mod routes;
 
 #[get("/")]
 fn index() -> &'static str {

@@ -4,6 +4,7 @@ use rocket::response::{Responder, Response};
 use rocket::*;
 use std::fmt::Debug;
 
+#[derive(PartialEq)]
 pub struct ApiResponse {
     status: Status,
     message: String,

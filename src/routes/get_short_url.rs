@@ -19,14 +19,14 @@ async fn get_short_url(
     let now_sec = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
     match MyUrl::from_redis(&mut connection, &url_id.to_string()) {
         Ok(val) => {
-            if let Some(expire) = val.expire_at_secs {
-                if expire > now_sec {
-                    return Ok(Redirect::moved(val.origin));
-                } else {
-                    return Err(ApiResponse::err(Status::NotFound, format!("url not found")));
-                }
+            let expire_at = val
+                .expire_at_secs
+                .map_or_else(|| 0, |v| v + val.created_at_secs.map_or_else(|| 0, |v| v));
+            if expire_at > now_sec {
+                return Ok(Redirect::moved(val.origin));
+            } else {
+                return Err(ApiResponse::err(Status::NotFound, format!("url not found")));
             }
-            println!("expire time not found in cache entry");
         }
         Err(msg) => {
             println!("fail to get from cache: {:?}", msg);

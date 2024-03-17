@@ -97,18 +97,12 @@ async fn list(mut db: Connection<Db>, mut connection: Conn) -> Result<ApiRespons
     Ok(ApiResponse::ok(json::to_string(&urls)?))
 }
 
-fn check_url(to_check: &String) -> Result<bool, ParseError> {
-    let result = Url::parse(to_check)?;
-    if result.scheme().len() == 0 {
-        return Ok(false);
-    } else if let None = result.host() {
-        return Ok(false);
-    }
-    Ok(true)
+fn check_url(to_check: &str) -> Result<(), ParseError> {
+    let _result = Url::parse(to_check)?;
+    Ok(())
 }
 
 fn check_and_set_expire(Json(mut body): Json<MyUrl>) -> Result<Json<MyUrl>, ApiResponse> {
-    let now_secs = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
     let expire = body
         .expire_at_secs
         .unwrap_or_else(|| config::MAX_URL_EXPIRE_SECS);
@@ -131,7 +125,7 @@ fn check_and_set_expire(Json(mut body): Json<MyUrl>) -> Result<Json<MyUrl>, ApiR
             ),
         ));
     } else {
-        body.expire_at_secs = Some(expire + now_secs);
+        body.expire_at_secs = Some(expire);
     }
     Ok(Json(body))
 }
@@ -140,4 +134,73 @@ pub fn stage() -> AdHoc {
     AdHoc::on_ignite("adding url endpoint", |rocket| async {
         rocket.mount("/url", routes![create, list])
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn expire_not_set_in_url() {
+        let req = Json(MyUrl {
+            id: None,
+            origin: String::from("abc"),
+            short: None,
+            expire_at_secs: None,
+            created_at_secs: None,
+        });
+        let req = check_and_set_expire(req);
+        let target = config::MAX_URL_EXPIRE_SECS;
+        assert_eq!(req.is_ok(), true);
+        let expire_at = req.ok().unwrap().expire_at_secs;
+        assert!(match expire_at {
+            Some(x) if x == target => true,
+            _ => false,
+        });
+    }
+
+    #[test]
+    fn expire_too_long() {
+        let target = config::MAX_URL_EXPIRE_SECS * 2;
+        let req = Json(MyUrl {
+            id: None,
+            origin: String::from("abc"),
+            short: None,
+            expire_at_secs: Some(target),
+            created_at_secs: None,
+        });
+        let req = check_and_set_expire(req);
+        assert_eq!(req.is_ok(), false);
+    }
+
+    #[test]
+    fn expire_too_short() {
+        let target = config::MIN_URL_EXPIRE_SECS - 1;
+        let req = Json(MyUrl {
+            id: None,
+            origin: String::from("abc"),
+            short: None,
+            expire_at_secs: Some(target),
+            created_at_secs: None,
+        });
+        let req = check_and_set_expire(req);
+        assert_eq!(req.is_ok(), false);
+    }
+
+    #[test]
+    fn unknown_url_format() {
+        let urls = [
+            "asdkjask",
+            "https://",
+            ":https://asd",
+            "ht tps://google.com",
+            "",
+            "google.com",
+            "https://",
+        ];
+        for url in urls {
+            let result = check_url(url);
+            assert!(result.is_err());
+        }
+    }
 }

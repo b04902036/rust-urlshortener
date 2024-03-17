@@ -25,3 +25,26 @@ pub fn gen_short_url() -> String {
     }
     ret
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config;
+    use std::collections::HashSet;
+
+    #[test]
+    fn check_short_url_length() {
+        let url = gen_short_url();
+        assert_eq!(config::SHORT_URL_LENGTH, url.len());
+    }
+
+    #[test]
+    fn url_should_not_repeat_often() {
+        let mut set: HashSet<String> = HashSet::new();
+        for _ in 0..5 {
+            let url = gen_short_url();
+            assert_eq!(true, set.get(&url).is_none());
+            set.insert(url);
+        }
+    }
+}
