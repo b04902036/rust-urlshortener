@@ -61,7 +61,7 @@ async fn create(
                 } else {
                     println!("uploaded to redis");
                 }
-                Ok(ApiResponse::ok(json::to_string(&object).unwrap()))
+                Ok(ApiResponse::ok(json::to_string(&object)?))
             }
             Err(err) => {
                 msg = err;

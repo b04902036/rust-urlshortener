@@ -53,7 +53,7 @@ impl Url {
                 cache_url.push(("created_at_secs", &created_at_str));
             }
 
-            if let Some(key) = self.short.as_ref() {
+            if let Some(ref key) = self.short {
                 conn.hset_multiple(key, &cache_url)?;
             } else {
                 return Err(anyhow!("short url not set"));

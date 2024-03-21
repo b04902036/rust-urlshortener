@@ -17,7 +17,7 @@ async fn get_short_url(
 ) -> Result<Redirect, ApiResponse> {
     // check from redis first
     let now_sec = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;
-    match MyUrl::from_redis(&mut connection, &url_id.to_string()) {
+    match MyUrl::from_redis(&mut connection, url_id) {
         Ok(val) => {
             let expire_at = val
                 .expire_at_secs
@@ -33,9 +33,9 @@ async fn get_short_url(
         }
     };
 
-    let predicate = myurl::short.eq(&url_id).and(expire_at_secs.gt(&now_sec));
-    let shorts: Vec<(String, i64)> = myurl::table
-        .select((myurl::origin, myurl::expire_at_secs))
+    let predicate = myurl::short.eq(url_id).and(expire_at_secs.gt(&now_sec));
+    let shorts: Vec<(String, i64, i64)> = myurl::table
+        .select((myurl::origin, myurl::expire_at_secs, myurl::created_at_secs))
         .filter(predicate)
         .load(&mut db)
         .await?;
@@ -47,14 +47,15 @@ async fn get_short_url(
     } else if shorts.len() == 0 {
         return Err(ApiResponse::err(Status::NotFound, format!("url not found")));
     }
-    let (origin_url, expire) = shorts.get(0).unwrap();
+    // we already check that shorts.len() == 1, so we can safely unwrap here
+    let (origin_url, expire, created_at) = shorts.get(0).unwrap();
     // upload to cache
     let result = MyUrl {
         id: None,
         origin: origin_url.clone(),
         short: None,
         expire_at_secs: Some(*expire),
-        created_at_secs: None,
+        created_at_secs: Some(*created_at),
     }
     .to_redis(&mut connection);
     if let Err(msg) = result {
